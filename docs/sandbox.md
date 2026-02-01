@@ -15,7 +15,3 @@ On LoongArch64 Linux systems, there are some temporary limitations due to the cu
 ### Other architectures
 
 All other supported architectures (x86_64, aarch64, riscv64) have full sandbox support including both filesystem (Landlock) and network (seccomp) restrictions.
-
-### RISC-V 64
-
-RISC-V 64-bit (riscv64gc) is fully supported with both Landlock filesystem restrictions and seccomp network filtering, as the `seccompiler` crate includes native support for this architecture.
