@@ -16,20 +16,21 @@ use std::path::PathBuf;
 use tempfile::NamedTempFile;
 
 // At least on GitHub CI, the arm64 tests appear to need longer timeouts.
+// LoongArch tests may also need longer timeouts similar to aarch64.
 
-#[cfg(not(target_arch = "aarch64"))]
+#[cfg(not(any(target_arch = "aarch64", target_arch = "loongarch64")))]
 const SHORT_TIMEOUT_MS: u64 = 200;
-#[cfg(target_arch = "aarch64")]
+#[cfg(any(target_arch = "aarch64", target_arch = "loongarch64"))]
 const SHORT_TIMEOUT_MS: u64 = 5_000;
 
-#[cfg(not(target_arch = "aarch64"))]
+#[cfg(not(any(target_arch = "aarch64", target_arch = "loongarch64")))]
 const LONG_TIMEOUT_MS: u64 = 1_000;
-#[cfg(target_arch = "aarch64")]
+#[cfg(any(target_arch = "aarch64", target_arch = "loongarch64"))]
 const LONG_TIMEOUT_MS: u64 = 5_000;
 
-#[cfg(not(target_arch = "aarch64"))]
+#[cfg(not(any(target_arch = "aarch64", target_arch = "loongarch64")))]
 const NETWORK_TIMEOUT_MS: u64 = 2_000;
-#[cfg(target_arch = "aarch64")]
+#[cfg(any(target_arch = "aarch64", target_arch = "loongarch64"))]
 const NETWORK_TIMEOUT_MS: u64 = 10_000;
 
 fn create_env_from_core_vars() -> HashMap<String, String> {

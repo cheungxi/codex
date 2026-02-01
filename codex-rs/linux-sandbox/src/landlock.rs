@@ -136,22 +136,40 @@ fn install_network_seccomp_filter_on_current_thread() -> std::result::Result<(),
     rules.insert(libc::SYS_socket, vec![unix_only_rule.clone()]);
     rules.insert(libc::SYS_socketpair, vec![unix_only_rule]); // always deny (Unix can use socketpair but fine, keep open?)
 
-    let filter = SeccompFilter::new(
-        rules,
-        SeccompAction::Allow,                     // default – allow
-        SeccompAction::Errno(libc::EPERM as u32), // when rule matches – return EPERM
-        if cfg!(target_arch = "x86_64") {
-            TargetArch::x86_64
-        } else if cfg!(target_arch = "aarch64") {
-            TargetArch::aarch64
-        } else {
-            unimplemented!("unsupported architecture for seccomp filter");
-        },
-    )?;
+    // LoongArch is not yet supported by seccompiler crate (v0.5.0 supports x86_64, aarch64, riscv64).
+    // For LoongArch, we skip the seccomp filter entirely. This is a temporary limitation until
+    // seccompiler adds LoongArch support or we implement a custom seccomp filter for LoongArch.
+    #[cfg(target_arch = "loongarch64")]
+    {
+        // On LoongArch, we cannot apply seccomp filters yet due to lack of support in seccompiler.
+        // Log a warning or return early. For now, we'll return Ok to avoid blocking LoongArch builds.
+        log::warn!(
+            "Seccomp network filtering is not yet supported on LoongArch64. Network sandboxing will be incomplete."
+        );
+        return Ok(());
+    }
 
-    let prog: BpfProgram = filter.try_into()?;
+    #[cfg(not(target_arch = "loongarch64"))]
+    {
+        let filter = SeccompFilter::new(
+            rules,
+            SeccompAction::Allow,                     // default – allow
+            SeccompAction::Errno(libc::EPERM as u32), // when rule matches – return EPERM
+            if cfg!(target_arch = "x86_64") {
+                TargetArch::x86_64
+            } else if cfg!(target_arch = "aarch64") {
+                TargetArch::aarch64
+            } else if cfg!(target_arch = "riscv64") {
+                TargetArch::riscv64
+            } else {
+                unimplemented!("unsupported architecture for seccomp filter");
+            },
+        )?;
 
-    apply_filter(&prog)?;
+        let prog: BpfProgram = filter.try_into()?;
 
-    Ok(())
+        apply_filter(&prog)?;
+
+        Ok(())
+    }
 }
